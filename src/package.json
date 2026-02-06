@@ -1,0 +1,60 @@
+{
+  "name": "unnoficial-ecole-directe-plus",
+  "version": "1.0.0",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder",
+    "build:win": "electron-builder --win",
+    "build:mac": "electron-builder --mac",
+    "build:linux": "electron-builder --linux"
+  },
+  "devDependencies": {
+    "electron": "^28.0.0",
+    "electron-builder": "^24.0.0"
+  },
+  "dependencies": {
+    "discord-rpc": "^4.0.1"
+  },
+  "build": {
+    "appId": "com.uedp.app",
+    "productName": "Unnoficial Ecole Directe Plus",
+    "directories": {
+      "output": "dist",
+      "buildResources": "assets"
+    },
+    "files": [
+      "**/*",
+      "!node_modules/**/*",
+      "!dist/**/*",
+      "!.gitignore",
+      "main.js",
+      "preload.js",
+      "package.json",
+      "assets/**/*",
+      "Unnoficial-Support-Ecole-Directe-Plus-Unblock/****/***/**/*",
+      "UEDP.crx"
+    ],
+    "win": {
+      "target": "nsis",
+      "icon": "assets/UEDP.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Unnoficial Ecole Directe Plus"
+    },
+    "mac": {
+      "category": "public.app-category.education",
+      "target": "dmg",
+      "icon": "assets/icon.icns"
+    },
+    "linux": {
+      "target": "AppImage",
+      "icon": "assets/icon.png",
+      "category": "Education"
+    }
+  }
+}
