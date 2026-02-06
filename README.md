@@ -7,7 +7,7 @@
 ***U*EDP** est une application desktop codé sous *electron* pour naviguer sur **Ecole Directe Plus** *(EDP)*.
 *EDP* augmente *EcoleDirecte*, avec une interface moderne et intuitive, enrichie de fonctionnalités exclusives, le tout de façon gratuite, libre et open-source.
 
-***U*EDP** est une version non-officielle et est développé par **Maxlware**, développeur chez *EDP*.
+***U*EDP** est une version non-officielle développé par **Maxlware**, développeur chez *EDP*.
 
 ## Installation
 0: Les prérequis sont **Node.js 24.11.1** ou plus.
