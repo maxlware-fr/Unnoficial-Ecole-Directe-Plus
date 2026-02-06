@@ -4,7 +4,7 @@
 
 # Unnoficial Ecole Directe Plus (UEDP)
 
-***U*DP** est une application desktop codé sous *electron* pour naviguer sur **Ecole Directe Plus** *(EDP)*.
+***U*EDP** est une application desktop codé sous *electron* pour naviguer sur **Ecole Directe Plus** *(EDP)*.
 *EDP* augmente *EcoleDirecte*, avec une interface moderne et intuitive, enrichie de fonctionnalités exclusives, le tout de façon gratuite, libre et open-source.
 
 ***U*EDP** est une version non-officielle et est développé par **Maxlware**, développeur chez *EDP*.
