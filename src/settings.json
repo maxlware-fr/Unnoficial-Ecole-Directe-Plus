@@ -1,0 +1,9 @@
+{
+  "settings": "true",
+
+  "ed-cookie": {
+    "enabled": true,
+    "hash":"false",
+    "value": "null"
+  }
+}
