@@ -1,3 +1,6 @@
+// preload.js
+// This file is loaded before the renderer process is loaded, it has access to Node.js APIs and can expose safe APIs to the renderer through contextBridge.
+
 const { ipcRenderer, contextBridge } = require('electron');
 
 contextBridge.exposeInMainWorld('electronAPI', {
