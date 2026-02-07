@@ -1,8 +1,14 @@
 const { app, BrowserWindow, session, Menu, shell, ipcMain, dialog } = require('electron');
 const path = require('path');
 const fs = require('fs').promises;
+const https = require('https');
 const os = require('os');
 const { Client } = require('discord-rpc');
+const notifier = require('node-notifier');
+
+// https://chatgpt.com/share/69875a1a-9088-8003-a12d-8c90b29066ef
+// https://chatgpt.com/share/69875a64-a81c-8003-b809-f011c116f66a
+const config_loader = require("./config_loader.js");
 
 let mainWindow;
 let extensionPopupWindow = null;
@@ -10,6 +16,7 @@ let rpc = null;
 let currentActivity = null;
 let isQuitting = false;
 
+// Verify available sites
 const availableSites = [
   { 
     name: 'EDP Production', 
@@ -36,19 +43,29 @@ const availableSites = [
 let currentSiteIndex = 0;
 let currentUrl = availableSites[currentSiteIndex].url;
 
+// ID
 const clientId = '1469379921737679101';
 
+// Test with node-notifier
+// https://www.npmjs.com/package/node-notifier#cross-platform-advanced-usage
+notifier.notify({
+  title: 'Unnoficial Ecole Directe Plus',
+  message: 'Chargé avec succès !',
+  icon: path.join(__dirname, 'assets', 'UEDP.png'),
+});
+
+// Config RPC state
 const pageConfigs = {
-  '/#home': { name: 'Accueil', details: 'Consulte la page d\'accueil' },
-  '/login': { name: 'Connexion', details: 'Sur la page de connexion' },
-  '/app/0/dashboard': { name: 'Tableau de bord', details: 'Gère son espace' },
-  '/app/0/grades': { name: 'Notes', details: 'Consulte ses notes' },
-  '/app/0/homeworks': { name: 'Devoirs', details: 'Planifie ses devoirs' },
-  '/app/0/messaging': { name: 'Messagerie', details: 'Consulte ses messages' },
-  '/app/0/timetable': { name: 'Emploi du temps', details: 'Vérifie son planning' },
-  '/app/0/settings': { name: 'Paramètres', details: 'Paramètre l\'application' },
-  '/app/0/account': { name: 'Compte', details: 'Gère son compte' },
-  '/edp-unblock': { name: 'UEDP Unblock', details: 'Page de l\'extension' }
+  '/#home': { name: '🏠 Accueil', details: 'Consulte la page d\'accueil' },
+  '/login': { name: '🔑 Connexion', details: 'Sur la page de connexion' },
+  '/app/0/dashboard': { name: '🖼️ Tableau de bord', details: 'Gère son espace' },
+  '/app/0/grades': { name: '💯 Notes', details: 'Consulte ses notes (des bonnes j\'espère !)' },
+  '/app/0/homeworks': { name: '📚 Devoirs', details: 'Planifie ses devoirs (j\'espère pas beaucoup)' },
+  '/app/0/messaging': { name: '✉️ Messagerie', details: 'Consulte ses messages' },
+  '/app/0/timetable': { name: '🕒 Emploi du temps', details: 'Vérifie son planning (longue journée ?)' },
+  '/app/0/settings': { name: '⚙️ Paramètres', details: 'Paramètre l\'application' },
+  '/app/0/account': { name: '👤 Compte', details: 'Gère son compte' },
+  '/edp-unblock': { name: '✖️ UEDP Unblock', details: 'Page de l\'extension' }
 };
 
 function getActivityFromUrl(url) {
@@ -69,8 +86,9 @@ function getActivityFromUrl(url) {
     };
   }
   
+  // Default
   return {
-    name: 'Navigation',
+    name: '🌐 Navigation',
     details: `Navigue sur ${getCurrentSiteName()}`,
     urlPath: '/'
   };
@@ -215,18 +233,20 @@ function updateDiscordActivity(pageInfo) {
 
   const { name, details, urlPath } = pageInfo;
   
+  // Line 40-111
   const activity = {
-    details: details,
-    state: `${name} - ${getCurrentSiteName()}`,
+    details: details, // 42-53
+    state: `${name}`, // 42-53
     startTimestamp: new Date(),
-    largeImageKey: 'edp_logo',
-    largeImageText: 'Unnoficial Ecole Directe Plus',
-    smallImageKey: 'icon',
-    smallImageText: getCurrentSiteName(),
+    largeImageKey: 'uedp', // assets/UEDP_1024.png
+    largeImageText: 'UEDP',
+    smallImageKey: 'eleve', // assets/eleve_1024.png
+    smallImageText: 'Compte élève',
+    // Not working (I guess)
     buttons: [
       {
-        label: 'Ouvrir ' + getCurrentSiteName(),
-        url: `${getCurrentSiteUrl()}${urlPath}`
+        label: 'Aller sur le site',
+        url: `https://ecole-directe.plus`
       }
     ]
   };
@@ -345,7 +365,7 @@ async function prepareExtension(originalPath) {
       await fs.unlink(chromiumManifestPath);
       log('Anciens manifests supprimes', 'info');
     } catch (error) {
-      // Ouaissss euhhh c michèlleuhhhhhh
+      // Recycle bin
     }
     
     return {
@@ -358,6 +378,7 @@ async function prepareExtension(originalPath) {
   }
 }
 
+// CustomMenu for site switching and extension access
 function createCustomMenu() {
   const template = [
     {
@@ -452,6 +473,7 @@ async function openExtensionPopup() {
   }
   
   try {
+    // Popup UEDP Support Unblock
     const extensionPath = path.join(__dirname, 'Unnoficial-Support-Ecole-Directe-Plus-Unblock');
     const popupPath = path.join(extensionPath, 'popup', 'popup.html');
     
@@ -462,7 +484,7 @@ async function openExtensionPopup() {
       height: 600,
       title: 'Extension EDP',
       backgroundColor: '#181828',
-      icon: path.join(__dirname, 'assets', 'icon.ico'),
+      icon: path.join(__dirname, 'assets', 'UEDP.ico'),
       frame: true,
       resizable: false,
       webPreferences: {
@@ -484,13 +506,16 @@ async function openExtensionPopup() {
   }
 }
 
+/*
+Exemple popup
+
 function createBasicPopup() {
   extensionPopupWindow = new BrowserWindow({
     width: 400,
     height: 500,
     title: 'Extension EDP',
     backgroundColor: '#181828',
-    icon: path.join(__dirname, 'assets', 'icon.ico'),
+    icon: path.join(__dirname, 'assets', 'UEDP.ico'),
     frame: true,
     resizable: false,
     webPreferences: {
@@ -535,7 +560,7 @@ function createBasicPopup() {
     </head>
     <body>
       <div class="container">
-        <h1 class="title">EDP Extension</h1>
+        <h1 class="title">UEDP Extension</h1>
         <div class="status">
           <strong>Statut:</strong> Extension active
         </div>
@@ -554,14 +579,15 @@ function createBasicPopup() {
   
   extensionPopupWindow.loadURL(`data:text/html;charset=UTF-8,${encodeURIComponent(basicHTML)}`);
 }
+*/
 
 function showAbout() {
   const aboutWindow = new BrowserWindow({
     width: 400,
     height: 350,
-    title: 'A propos - Ecole Directe Plus',
+    title: 'A propos - Unnoficial Ecole Directe Plus',
     backgroundColor: '#181828',
-    icon: path.join(__dirname, 'assets', 'icon.ico'),
+    icon: path.join(__dirname, 'assets', 'UEDP.ico'),
     frame: true,
     resizable: false,
     modal: true,
@@ -653,6 +679,7 @@ function showAbout() {
   aboutWindow.loadURL(`data:text/html;charset=UTF-8,${encodeURIComponent(aboutHTML)}`);
 }
 
+// Custom bar in the top of the page with extension name and buttons (minimize, maximize, close)
 function injectCustomTitleBar() {
   const injectScript = `
     (function() {
@@ -664,7 +691,7 @@ function injectCustomTitleBar() {
       
       const leftSection = document.createElement('div');
       leftSection.style.cssText = 'display: flex; align-items: center; gap: 10px;';
-      leftSection.innerHTML = '<span style="font-weight: bold; color: #64b5f6; font-size: 16px;">EDP</span><span style="font-size: 14px;">Ecole Directe Plus</span>';
+      leftSection.innerHTML = '<span style="font-weight: bold; color: #64b5f6; font-size: 16px;">UEDP</span><span style="font-size: 14px;">Unnoficial Ecole Directe Plus</span>';
       
       const rightSection = document.createElement('div');
       rightSection.style.cssText = 'display: flex; align-items: center; gap: 5px; -webkit-app-region: no-drag;';
@@ -678,7 +705,7 @@ function injectCustomTitleBar() {
       document.body.style.paddingTop = '32px';
       
       const style = document.createElement('style');
-      style.textContent = '#edp-custom-title-bar button:hover { background: rgba(255, 255, 255, 0.1) !important; } #edp-close-btn:hover { background: #d32f2f !important; }';
+      style.textContent = '#edp-custom-title-bar button:hover { background: rgba(0, 0, 0, 0.1) !important; } #edp-close-btn:hover { background: #d32f2f !important; }';
       document.head.appendChild(style);
       
       document.getElementById('edp-minimize-btn').addEventListener('click', () => {
@@ -706,6 +733,8 @@ function injectCustomTitleBar() {
   });
 }
 
+// UndleEDPUnblockPage /edp-unblock
+// Console log in the handlePostMessage.js in the extension.
 function handleEdpUnblockPage() {
   const edpUnblockScript = `
     (function() {
@@ -713,7 +742,7 @@ function handleEdpUnblockPage() {
         const downloadBtn = document.querySelector('.edpu-download-link.available');
         
         if (downloadBtn && window.location.pathname.includes('/edp-unblock')) {
-          console.log('Bouton EDP Unblock trouvé, transformation...');
+          console.log('Bouton UEDP Unblock trouvé, transformation...');
           
           downloadBtn.innerHTML = 'Extension Chargée';
           downloadBtn.style.cssText = 'background: linear-gradient(135deg, #181828 0%, #0d47a1 100%) !important; color: white !important; border: 2px solid #64b5f6 !important; border-radius: 10px !important; padding: 15px 30px !important; font-size: 18px !important; font-weight: bold !important; cursor: pointer !important; transition: all 0.3s ease !important; box-shadow: 0 4px 15px rgba(24, 24, 40, 0.3) !important; position: relative !important; overflow: hidden !important;';
@@ -762,8 +791,11 @@ function handleEdpUnblockPage() {
     })();
   `;
   
+  // FR: Si cela ne marche pas, vérifiez la version de l'extension et que le script est bien injecté sur la page /edp-unblock. Vous devriez voir un message dans la console 
+  // de l'extension (handlePostMessage.js) indiquant que le bouton a été transformé.
   mainWindow.webContents.executeJavaScript(edpUnblockScript).catch(err => {
     console.error('Erreur injection EDP Unblock:', err);
+    console.error('Assurez-vous que le script est injecté sur la page /edp-unblock et que la console de l\'extension affiche le message de transformation du bouton.');
   });
 }
 
@@ -788,12 +820,13 @@ app.whenReady().then(async () => {
     log('Erreur lors du chargement de l\'extension: ' + error.message, 'error');
   }
   
+  // Main window
   mainWindow = new BrowserWindow({
     width: 1200,
     height: 800,
     title: `Ecole Directe Plus - ${getCurrentSiteName()}`,
     backgroundColor: '#181828',
-    icon: path.join(__dirname, 'assets', 'icon.ico'),
+    icon: path.join(__dirname, 'assets', 'UEDP.ico'),
     frame: false,
     webPreferences: {
       nodeIntegration: false,
@@ -805,6 +838,7 @@ app.whenReady().then(async () => {
     show: false
   });
   
+  // RPC Init
   initializeRPC();
   
   createCustomMenu();
@@ -874,6 +908,29 @@ app.whenReady().then(async () => {
   
   mainWindow.webContents.on('did-finish-load', () => {
     log('Injection de la barre personnalisée...', 'info');
+    log(`
+                   /%&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&    
+               #&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&    
+            /&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&    
+           &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&    
+         /&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&    
+         %&&&&%/                                            
+        /&&/                                                
+        %/    /#&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&    
+           /%&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&    
+          %&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&    
+         %&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&    
+        (&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&    
+        &&&&&&&&&&&&/                                       
+        &&&&&&&&&&&&\\                                       
+        (&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&    
+         %&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&    
+          %&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&    
+           \\&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&    
+              \\%&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&    
+    
+                Looking for curious minds. Are you in?      
+          https://github.com/Magic-Fishes/Ecole-Directe-Plus`);
     
     const currentUrl = mainWindow.webContents.getURL();
     const pageInfo = getActivityFromUrl(currentUrl);
@@ -891,6 +948,7 @@ app.whenReady().then(async () => {
       injectCustomTitleBar();
     }, 500);
     
+    // Exemble scrollbar styling, you can customize it as you want
     mainWindow.webContents.insertCSS(`
       ::-webkit-scrollbar {
         width: 10px;
@@ -964,6 +1022,7 @@ app.on('window-all-closed', () => {
 app.on('activate', () => {
   if (mainWindow === null) {
     app.whenReady().then(() => {
+      // Main window
       mainWindow = new BrowserWindow({ 
         width: 1200, 
         height: 800, 
@@ -977,6 +1036,7 @@ app.on('activate', () => {
       mainWindow.loadURL(currentUrl);
       mainWindow.setTitle(`Unnoficial Ecole Directe Plus - ${getCurrentSiteName()}`);
       initializeRPC();
+      config_loader();
     });
   }
 });
@@ -985,6 +1045,7 @@ process.on('uncaughtException', (error) => {
   log('Erreur non capturée: ' + error.message, 'error');
 });
 
+// Proccess exit event
 process.on('exit', () => {
   if (rpc) {
     rpc.destroy();
