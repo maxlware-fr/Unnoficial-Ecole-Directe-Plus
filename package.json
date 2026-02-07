@@ -1,6 +1,6 @@
 {
   "name": "unnoficial-ecole-directe-plus",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "main": "main.js",
   "scripts": {
     "start": "electron .",
@@ -14,7 +14,8 @@
     "electron-builder": "^24.0.0"
   },
   "dependencies": {
-    "discord-rpc": "^4.0.1"
+    "discord-rpc": "^4.0.1",
+    "node-notifier": "^10.0.1"
   },
   "build": {
     "appId": "com.uedp.app",
@@ -32,8 +33,7 @@
       "preload.js",
       "package.json",
       "assets/**/*",
-      "Unnoficial-Support-Ecole-Directe-Plus-Unblock/****/***/**/*",
-      "UEDP.crx"
+      "Unnoficial-Support-Ecole-Directe-Plus-Unblock/****/***/**/*"
     ],
     "win": {
       "target": "nsis",
