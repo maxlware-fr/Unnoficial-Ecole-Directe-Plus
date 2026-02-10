@@ -16,6 +16,7 @@ let extensionPopupWindow = null;
 let rpc = null;
 let currentActivity = null;
 let isQuitting = false;
+let videoWindow = null;
 
 // Verify available sites
 const availableSites = [
@@ -202,6 +203,114 @@ function showSiteSelectionMenu() {
   
   const menu = Menu.buildFromTemplate(template);
   menu.popup({ window: mainWindow });
+}
+
+function openVideoWindow() {
+  if (videoWindow) {
+    videoWindow.focus();
+    return;
+  }
+  
+  videoWindow = new BrowserWindow({
+    width: 800,
+    height: 600,
+    title: 'UEDP Video Player',
+    backgroundColor: '#181828',
+    icon: path.join(__dirname, 'assets', 'UEDP.ico'),
+    frame: true,
+    resizable: true,
+    webPreferences: {
+      nodeIntegration: false,
+      contextIsolation: true
+    }
+  });
+  
+  const videoHTML = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <style>
+        * {
+          margin: 0;
+          padding: 0;
+          box-sizing: border-box;
+        }
+        body {
+          background: #181828;
+          height: 100vh;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+        }
+        .video-container {
+          width: 100%;
+          max-width: 800px;
+          padding: 20px;
+        }
+        video {
+          width: 100%;
+          border-radius: 10px;
+          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+          outline: none;
+        }
+        .controls {
+          margin-top: 15px;
+          display: flex;
+          justify-content: center;
+          gap: 10px;
+        }
+        button {
+          background: #3949ab;
+          color: white;
+          border: none;
+          padding: 8px 16px;
+          border-radius: 5px;
+          cursor: pointer;
+          font-family: Arial, sans-serif;
+        }
+        button:hover {
+          background: #5c6bc0;
+        }
+        .title {
+          color: white;
+          text-align: center;
+          margin-bottom: 15px;
+          font-family: Arial, sans-serif;
+        }
+      </style>
+    </head>
+    <body>
+      <div class="video-container">
+        <h2 class="title">:O</h2>
+        <video id="videoPlayer" controls autoplay>
+          <source src="https://cdn.maxlware.com/videos/test_video.mp4" type="video/mp4">
+          Votre navigateur ne supporte pas la lecture de vidéos.
+        </video>
+      </div>
+      <script>
+        const video = document.getElementById('videoPlayer');
+        video.addEventListener('error', (e) => {
+          console.error('Erreur vidéo:', e);
+          alert('Impossible de charger la vidéo. Vérifiez votre connexion ou l\\'URL.');
+        });
+        
+        video.addEventListener('loadeddata', () => {
+          console.log('Vidéo chargée, durée:', video.duration);
+        });
+      </script>
+    </body>
+    </html>
+  `;
+  
+  videoWindow.loadURL(`data:text/html;charset=UTF-8,${encodeURIComponent(videoHTML)}`);
+  
+  videoWindow.on('closed', () => {
+    videoWindow = null;
+  });
+  
+  log('Fenêtre vidéo ouverte', 'success');
 }
 
 async function initializeRPC() {
@@ -418,6 +527,8 @@ function createCustomMenu() {
         { label: 'Forcer rechargement', accelerator: 'CmdOrCtrl+Shift+R', role: 'forceReload' },
         { label: 'Outils developpeur', accelerator: 'CmdOrCtrl+Shift+I', role: 'toggleDevTools' },
         { type: 'separator' },
+        { label: 'Ouvrir vidéo (Alt+V)', accelerator: 'Alt+V', click: () => openVideoWindow() },
+        { type: 'separator' },
         { label: 'Plein ecran', accelerator: 'F11', role: 'togglefullscreen' }
       ]
     },
@@ -507,9 +618,6 @@ async function openExtensionPopup() {
   }
 }
 
-/*
-Exemple popup
-
 function createBasicPopup() {
   extensionPopupWindow = new BrowserWindow({
     width: 400,
@@ -580,7 +688,6 @@ function createBasicPopup() {
   
   extensionPopupWindow.loadURL(`data:text/html;charset=UTF-8,${encodeURIComponent(basicHTML)}`);
 }
-*/
 
 function showAbout() {
   const aboutWindow = new BrowserWindow({
@@ -667,10 +774,11 @@ function showAbout() {
         </div>
         
         <p>Appuyez sur <span class="shortcut">Ctrl+S</span> pour changer de site</p>
+        <p>Appuyez sur <span class="shortcut">Alt+V</span> pour ouvrir le lecteur vidéo</p>
         
         <div class="version">
           <p>Version 1.1.0</p>
-          <p>Avec système de changement de site</p>
+          <p>Avec système de changement de site et lecteur vidéo</p>
         </div>
       </div>
     </body>
@@ -1083,6 +1191,12 @@ app.whenReady().then(async () => {
       event.preventDefault();
       showSiteSelectionMenu();
     }
+    
+    // Ajout du raccourci Alt+V pour ouvrir la fenêtre vidéo
+    if (input.alt && input.key.toLowerCase() === 'v') {
+      event.preventDefault();
+      openVideoWindow();
+    }
   });
   
   mainWindow.on('closed', () => {
@@ -1100,6 +1214,9 @@ app.whenReady().then(async () => {
 app.on('before-quit', async (event) => {
   if (!isQuitting) {
     event.preventDefault();
+    if (videoWindow && !videoWindow.isDestroyed()) {
+      videoWindow.close();
+    }
     await shutdownRPC();
     app.quit();
   }
