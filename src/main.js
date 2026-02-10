@@ -11,6 +11,7 @@ const notifier = require('node-notifier');
 const config_loader = require("./config_loader.js");
 
 let mainWindow;
+let splashWindow; // Fenêtre de chargement
 let extensionPopupWindow = null;
 let rpc = null;
 let currentActivity = null;
@@ -802,6 +803,90 @@ function handleEdpUnblockPage() {
 app.whenReady().then(async () => {
   log('Démarrage de Ecole Directe Plus...', 'info');
   
+  // Splash screen
+  splashWindow = new BrowserWindow({
+    width: 1054,
+    height: 290,
+    frame: false,
+    center: true,
+    transparent: false,
+    alwaysOnTop: true,
+    resizable: false,
+    skipTaskbar: true,
+    show: false,
+    webPreferences: {
+      nodeIntegration: false,
+      contextIsolation: true
+    }
+  });
+  
+  const splashHTML = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <style>
+        * {
+          margin: 0;
+          padding: 0;
+          box-sizing: border-box;
+        }
+        body {
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          height: 100vh;
+          background-color: #181828;
+          overflow: hidden;
+        }
+        .splash-container {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+        }
+        .loading-image {
+          max-width: 1054px;
+          max-height: 396px;
+          object-fit: contain;
+          border-radius: 15px;
+          box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+        @keyframes fadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+        .splash-container {
+          animation: fadeIn 0.5s ease;
+        }
+      </style>
+    </head>
+    <body>
+      <div class="splash-container">
+        <img src="cover.png" class="loading-image" />
+      </div>
+    </body>
+    </html>
+  `;
+  
+  const imagePath = path.join(__dirname, 'assets', 'cover.png');
+  let imageDataUrl;
+  
+  try {
+    const imageBuffer = await fs.readFile(imagePath);
+    const imageBase64 = imageBuffer.toString('base64');
+    imageDataUrl = `data:image/png;base64,${imageBase64}`;
+  } catch (error) {
+    console.error('Erreur lors du chargement de l\'image:', error);
+    imageDataUrl = '';
+  }
+  
+  const finalHTML = splashHTML.replace('src="cover.png"', `src="${imageDataUrl}"`);
+  splashWindow.loadURL(`data:text/html;charset=UTF-8,${encodeURIComponent(finalHTML)}`);
+  
+  splashWindow.once('ready-to-show', () => {
+    splashWindow.show();
+  });
+  
   try {
     const extensionPath = path.join(__dirname, 'Unnoficial-Support-Ecole-Directe-Plus-Unblock');
     log(`Chemin de l'extension: ${extensionPath}`, 'info');
@@ -902,8 +987,15 @@ app.whenReady().then(async () => {
   });
   
   mainWindow.once('ready-to-show', () => {
-    mainWindow.show();
-    log('Fenêtre principale affichée', 'success');
+    setTimeout(() => {
+      mainWindow.show();
+      
+      if (splashWindow && !splashWindow.isDestroyed()) {
+        splashWindow.close();
+      }
+      
+      log('Fenêtre principale affichée', 'success');
+    }, 1000);
   });
   
   mainWindow.webContents.on('did-finish-load', () => {
@@ -997,6 +1089,12 @@ app.whenReady().then(async () => {
     shutdownRPC();
     mainWindow = null;
   });
+  
+  setTimeout(() => {
+    if (splashWindow && !splashWindow.isDestroyed()) {
+      splashWindow.close();
+    }
+  }, 5000);
 });
 
 app.on('before-quit', async (event) => {
