@@ -44,3 +44,7 @@ Bin.js à été crée par Maxlware.
 La license est la MIT License, ce qui signifie que vous êtes libre de l'utiliser, de le modifier et de le distribuer, tant que vous respectez les conditions de la license.
 Pour plus d'informations, veuillez consulter le fichier LICENSE dans le dépôt GitHub de l'application.
 */
+
+#!/usr/bin/env node
+console.log('soon :)');
+process.exit(1);
