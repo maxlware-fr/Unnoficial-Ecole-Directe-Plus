@@ -10,13 +10,13 @@ const notifier = require('node-notifier');
 // https://chatgpt.com/share/69875a64-a81c-8003-b809-f011c116f66a
 const config_loader = require("./config_loader.js");
 
-let mainWindow;
-let splashWindow; // Fenêtre de chargement
-let extensionPopupWindow = null;
-let rpc = null;
-let currentActivity = null;
-let isQuitting = false;
-let videoWindow = null;
+let mainWindow; // Main application window
+let splashWindow; // Loading screen
+let extensionPopupWindow = null; // Popup for the extension interface
+let rpc = null; // Discord RPC client
+let currentActivity = null; // Current activity for Discord RPC
+let isQuitting = false; // Flag to prevent multiple quit attempts
+let videoWindow = null; // Window for video
 
 // Verify available sites
 const availableSites = [
@@ -67,7 +67,9 @@ const pageConfigs = {
   '/app/0/timetable': { name: '🕒 Emploi du temps', details: 'Vérifie son planning (longue journée ?)' },
   '/app/0/settings': { name: '⚙️ Paramètres', details: 'Paramètre l\'application' },
   '/app/0/account': { name: '👤 Compte', details: 'Gère son compte' },
-  '/edp-unblock': { name: '✖️ UEDP Unblock', details: 'Page de l\'extension' }
+  '/edp-unblock': { name: '✖️ UEDP Unblock', details: 'Page de l\'extension' },
+  '/404': { name: '✖️ Page non trouvée', details: 'Page d\'erreur 404' },
+  '/museum': { name: '🖼️ Musée', details: 'Page du musée' }
 };
 
 function getActivityFromUrl(url) {
