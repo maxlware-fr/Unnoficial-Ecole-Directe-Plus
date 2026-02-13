@@ -35,9 +35,9 @@ try {
     try {
       const install = require('./install.js');
       await install();
-      console.log('✅ Installation terminée avec succès.');
+      console.log('Installation terminée avec succès.');
     } catch (err) {
-      console.error('❌ Erreur lors de l\'installation:', err.message);
+      console.error('Erreur lors de l\'installation:', err.message);
       dialog.showErrorBox(
         'Erreur d\'installation',
         `L'installation de UEDP a échoué.\n\nDétails : ${err.message || err}\n\nL'application va se fermer.`
@@ -883,3 +883,4 @@ process.on('uncaughtException', (error) => {
 process.on('exit', () => {
   if (rpc) rpc.destroy();
 });
+
