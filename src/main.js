@@ -10,7 +10,7 @@ if (process.platform === 'win32') {
   try {
     require('child_process').execSync('chcp 65001', { stdio: 'ignore' });
   } catch (e) {
-    // none
+    console.warn("[WARN] Tentative d'éxécution échoué.")
   }
 }
 
@@ -22,22 +22,22 @@ try {
     process.stderr.setEncoding('utf8');
   }
 } catch (e) {
-  // none
+  console.warn("[WARN] Tentative d'encodage échoué.")
 }
 
 (async () => {
   const installFlag = path.join(__dirname, '.installed');
   try {
     await fs.access(installFlag);
-    // Continue if installed.
+    console.log("[INFO] Installation déjà faite.")
   } catch {
-    console.log('Premier lancement détecté – Installation en cours...');
+    console.log('[INFO] Premier lancement détecté – Installation en cours...');
     try {
       const install = require('./install.js');
       await install();
-      console.log('Installation terminée avec succès.');
+      console.log('[OK] Installation terminée avec succès.');
     } catch (err) {
-      console.error('Erreur lors de l\'installation:', err.message);
+      console.error('[ERROR] Erreur lors de l\'installation:', err.message);
       dialog.showErrorBox(
         'Erreur d\'installation',
         `L'installation de UEDP a échoué.\n\nDétails : ${err.message || err}\n\nL'application va se fermer.`
@@ -883,4 +883,3 @@ process.on('uncaughtException', (error) => {
 process.on('exit', () => {
   if (rpc) rpc.destroy();
 });
-
