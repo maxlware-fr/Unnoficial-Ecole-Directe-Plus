@@ -48,7 +48,9 @@ try {
   }
 
   await app.whenReady();
-  await startApp();
+  console.log("[INFO] Ouverture du launcher UEDP...")
+  showLauncher();
+  console.log("[OK] Ouverture du launcher UEDP réussi.")
 })();
 
 // https://chatgpt.com/share/69875a1a-9088-8003-a12d-8c90b29066ef
@@ -57,6 +59,7 @@ const config_loader = require("./config_loader.js");
 
 let mainWindow; // Fenêtre principale
 let splashWindow; // Écran de chargement
+let launcherWindow; // Fenêtre du lanceur
 let extensionPopupWindow = null;
 let rpc = null;
 let currentActivity = null;
@@ -87,7 +90,7 @@ const availableSites = [
   }
 ];
 
-let currentSiteIndex = 0;
+let currentSiteIndex = 0; // Sera mis à jour après le choix
 let currentUrl = availableSites[currentSiteIndex].url;
 
 // ID Discord RPC
@@ -648,6 +651,323 @@ function injectCustomTitleBar() {
   mainWindow.webContents.executeJavaScript(injectScript).catch(err => console.error('Erreur injection barre:', err));
 }
 
+function showLauncher() {
+  if (launcherWindow) {
+    launcherWindow.focus();
+    return;
+  }
+
+  launcherWindow = new BrowserWindow({
+    width: 900,
+    height: 900,
+    title: 'UEDP - Choisissez votre version',
+    backgroundColor: '#181828',
+    icon: path.join(__dirname, 'assets', 'UEDP.ico'),
+    frame: false,
+    center: true,
+    show: true,
+    resizable: false,
+    webPreferences: {
+      preload: path.join(__dirname, 'preload-launcher.js'),
+      nodeIntegration: false,
+      contextIsolation: true
+    }
+  });
+
+  let logoBase64 = '';
+  fs.readFile(path.join(__dirname, 'assets', 'UEDP.png'))
+    .then(buffer => {
+      logoBase64 = `data:image/png;base64,${buffer.toString('base64')}`;
+      loadLauncherContent(logoBase64);
+    })
+    .catch(err => {
+      console.error('Erreur chargement logo:', err);
+      loadLauncherContent('');
+    });
+
+  function loadLauncherContent(logoData) {
+    const launcherHTML = `
+      <!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+    }
+
+    body {
+      background: radial-gradient(circle at 10% 30%, #1e2a3a, #0b0e18);
+      color: #fff;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .container {
+      display: flex;
+      width: 100%;
+      max-width: 820px;
+      background: rgba(20, 25, 40, 0.6);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 32px;
+      overflow: hidden;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(255, 255, 255, 0.02) inset;
+    }
+
+    .left {
+      flex: 1;
+      background: rgba(8, 12, 22, 0.7);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .left img {
+      max-width: 100%;
+      max-height: 260px;
+      object-fit: contain;
+      border-radius: 20px;
+      box-shadow: 0 20px 30px -10px rgba(0, 0, 0, 0.6);
+      transition: transform 0.3s ease;
+    }
+
+    .left img:hover {
+      transform: scale(1.02);
+    }
+
+    .right {
+      flex: 1.5;
+      padding: 36px 32px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    h2 {
+      color: #fff;
+      font-weight: 600;
+      font-size: 1.9rem;
+      letter-spacing: -0.02em;
+      margin-bottom: 28px;
+      background: linear-gradient(135deg, #b3d9ff, #7aa9ff);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    p {
+      color: #fff;
+      font-weight: 200;
+      font-size: 1.9rem;
+      letter-spacing: -0.02em;
+      margin-bottom: 28px;
+      background: linear-gradient(135deg, #b3d9ff, #7aa9ff);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .options {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      margin-bottom: 36px;
+    }
+
+    .option {
+      display: flex;
+      align-items: flex-start;
+      gap: 16px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      border-radius: 20px;
+      padding: 16px 20px;
+      transition: all 0.25s ease;
+      cursor: pointer;
+    }
+
+    .option:hover {
+      background: rgba(50, 80, 150, 0.15);
+      border-color: rgba(100, 180, 255, 0.3);
+      transform: translateY(-2px);
+      box-shadow: 0 12px 24px -12px rgba(0, 120, 255, 0.3);
+    }
+
+    .option input[type="radio"] {
+      appearance: none;
+      -webkit-appearance: none;
+      width: 22px;
+      height: 22px;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-radius: 50%;
+      margin-top: 2px;
+      background: transparent;
+      transition: all 0.2s ease;
+      position: relative;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    .option input[type="radio"]:checked {
+      border-color: #5a9eff;
+      background: #5a9eff;
+      box-shadow: 0 0 12px #5a9eff;
+    }
+
+    .option input[type="radio"]:checked::after {
+      content: "";
+      position: absolute;
+      width: 10px;
+      height: 10px;
+      background: white;
+      border-radius: 50%;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+    }
+
+    .option div {
+      flex: 1;
+    }
+
+    .option label {
+      font-size: 1.2rem;
+      font-weight: 500;
+      color: #f0f4ff;
+      cursor: pointer;
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    .option small {
+      display: block;
+      color: #a0b5d9;
+      font-size: 0.9rem;
+      line-height: 1.4;
+    }
+
+    .launch-btn {
+      align-self: flex-start;
+      background: linear-gradient(125deg, #2b4b9a, #1f3a7a);
+      border: none;
+      border-radius: 40px;
+      padding: 14px 36px;
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: white;
+      cursor: pointer;
+      box-shadow: 0 8px 18px rgba(0, 30, 80, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.1) inset;
+      transition: all 0.25s ease;
+      letter-spacing: 0.3px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .launch-btn::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+      transition: left 0.6s ease;
+    }
+
+    .launch-btn:hover {
+      transform: scale(1.04);
+      background: linear-gradient(125deg, #365fbf, #254a97);
+      box-shadow: 0 12px 28px -5px #3f6ef0, 0 0 0 1px rgba(255, 255, 255, 0.2) inset;
+    }
+
+    .launch-btn:hover::before {
+      left: 100%;
+    }
+
+    .launch-btn:active {
+      transform: scale(0.98);
+    }
+
+    .footer {
+      margin-top: 28px;
+      font-size: 0.85rem;
+      color: #7f92b3;
+      text-align: right;
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+      padding-top: 16px;
+      letter-spacing: 0.3px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="left">
+      <img src="${logoData || 'assets/uedp-big.png'}" alt="Logo EDP">
+    </div>
+    <div class="right">
+      <div>
+        <h2>Bienvenue sur UEDP</h2>
+        <p>Choisissez votre version</p>
+        <div class="options" id="options">
+          ${availableSites.map((site, index) => `
+            <div class="option" onclick="document.getElementById('site${index}').click();">
+              <input type="radio" name="site" id="site${index}" value="${index}" ${index === 0 ? 'checked' : ''}>
+              <div>
+                <label for="site${index}">${site.name}</label>
+                <small>${site.description}</small>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+      <button class="launch-btn" id="launchBtn">Lancer</button>
+      <div class="footer">UEDP Launcher</div>
+    </div>
+  </div>
+
+  <script>
+    document.getElementById('launchBtn').addEventListener('click', () => {
+      const selected = document.querySelector('input[name="site"]:checked');
+      if (selected) {
+        const index = parseInt(selected.value);
+        const url = ${JSON.stringify(availableSites.map(s => s.url))}[index];
+        window.launcherAPI.launch(url, index);
+      }
+    });
+  </script>
+</body>
+</html>
+    `;
+    launcherWindow.loadURL(`data:text/html;charset=UTF-8,${encodeURIComponent(launcherHTML)}`);
+  }
+
+  launcherWindow.on('closed', () => {
+    launcherWindow = null;
+    if (!mainWindow && !splashWindow) {
+      app.quit();
+    }
+  });
+}
+
+// IPC Launch
+ipcMain.on('launch-app', (event, url, index) => {
+  if (launcherWindow && !launcherWindow.isDestroyed()) {
+    launcherWindow.close();
+  }
+  currentSiteIndex = index;
+  currentUrl = url;
+  startApp()
+});
+
 async function startApp() {
   log('Démarrage de Ecole Directe Plus...', 'info');
 
@@ -812,7 +1132,6 @@ async function startApp() {
     if (url.includes('/edp-unblock')) setTimeout(handleEdpUnblockPage, 1000);
   });
 
-  // Raccourcis clavier
   mainWindow.webContents.on('before-input-event', (event, input) => {
     if (input.control && input.key.toLowerCase() === 's') {
       event.preventDefault();
@@ -825,6 +1144,11 @@ async function startApp() {
     if (input.alt && input.key.toLowerCase() === 'v') {
       event.preventDefault();
       openVideoWindow();
+    }
+    // Not work idk why
+    if (imput.alt && imput.key.toLowerCase() === 'l') {
+      event.preventDefault();
+      showLauncher();
     }
   });
 
@@ -859,20 +1183,7 @@ app.on('window-all-closed', () => {
 
 app.on('activate', () => {
   if (mainWindow === null) {
-    app.whenReady().then(() => {
-      mainWindow = new BrowserWindow({
-        width: 1200,
-        height: 800,
-        frame: false,
-        backgroundColor: '#181828',
-        icon: path.join(__dirname, 'assets', 'icon.ico'),
-        webPreferences: { preload: path.join(__dirname, 'preload.js') }
-      });
-      mainWindow.loadURL(currentUrl);
-      mainWindow.setTitle(`Unnoficial Ecole Directe Plus - ${getCurrentSiteName()}`);
-      initializeRPC();
-      config_loader();
-    });
+    showLauncher();
   }
 });
 
