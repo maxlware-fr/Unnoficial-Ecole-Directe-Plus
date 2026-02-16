@@ -20,7 +20,7 @@ if (process.platform === 'win32') {
   try {
     require('child_process').execSync('chcp 65001', { stdio: 'ignore' });
   } catch (e) {
-    // none
+    console.warn("[WARN] Tentative d'éxécution échoué.")
   }
 }
 
@@ -32,7 +32,7 @@ try {
     process.stderr.setEncoding('utf8');
   }
 } catch (e) {
-  // none
+  console.warn("[WARN] Tentative d'encodage échoué.")
 }
 
 const BIN_JS_URL = 'https://raw.githubusercontent.com/maxlware-fr/Unnoficial-Ecole-Directe-Plus/refs/heads/main/src/%23trmn/bin.js';
@@ -197,7 +197,7 @@ async function runInstall() {
     log('Installation déjà effectuée. Pour réinstaller, supprimez .installed', 'info');
     return false;
   } catch {
-    // Continue
+    log('Vérification .installed réussi.')
   }
 
   try {
@@ -216,7 +216,7 @@ async function runInstall() {
     await fs.writeFile(INSTALL_FLAG_FILE, new Date().toISOString());
     
     log('Installation terminée avec succès !', 'success');
-    log('Vous pouvez maintenant utiliser "uedp start" dans un nouveau terminal.', 'success');
+    // log('Vous pouvez maintenant utiliser "uedp start" dans un nouveau terminal.', 'success');
     return true;
     
   } catch (error) {
