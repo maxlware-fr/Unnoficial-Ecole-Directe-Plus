@@ -690,260 +690,303 @@ function showLauncher() {
       <!DOCTYPE html>
 <html>
 <head>
-  <meta charset="UTF-8">
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-      font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
-    }
-
-    body {
-      background: radial-gradient(circle at 10% 30%, #1e2a3a, #0b0e18);
-      color: #fff;
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 20px;
-    }
-
-    .container {
-      display: flex;
-      width: 100%;
-      max-width: 820px;
-      background: rgba(20, 25, 40, 0.6);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      border-radius: 32px;
-      overflow: hidden;
-      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(255, 255, 255, 0.02) inset;
-    }
-
-    .left {
-      flex: 1;
-      background: rgba(8, 12, 22, 0.7);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 24px;
-    }
-
-    .left img {
-      max-width: 100%;
-      max-height: 260px;
-      object-fit: contain;
-      border-radius: 20px;
-      box-shadow: 0 20px 30px -10px rgba(0, 0, 0, 0.6);
-      transition: transform 0.3s ease;
-    }
-
-    .left img:hover {
-      transform: scale(1.02);
-    }
-
-    .right {
-      flex: 1.5;
-      padding: 36px 32px;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-    }
-
-    h2 {
-      color: #fff;
-      font-weight: 600;
-      font-size: 1.9rem;
-      letter-spacing: -0.02em;
-      margin-bottom: 28px;
-      background: linear-gradient(135deg, #b3d9ff, #7aa9ff);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-    }
-
-    p {
-      color: #fff;
-      font-weight: 200;
-      font-size: 1.9rem;
-      letter-spacing: -0.02em;
-      margin-bottom: 28px;
-      background: linear-gradient(135deg, #b3d9ff, #7aa9ff);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-    }
-
-    .options {
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-      margin-bottom: 36px;
-    }
-
-    .option {
-      display: flex;
-      align-items: flex-start;
-      gap: 16px;
-      background: rgba(255, 255, 255, 0.03);
-      border: 1px solid rgba(255, 255, 255, 0.05);
-      border-radius: 20px;
-      padding: 16px 20px;
-      transition: all 0.25s ease;
-      cursor: pointer;
-    }
-
-    .option:hover {
-      background: rgba(50, 80, 150, 0.15);
-      border-color: rgba(100, 180, 255, 0.3);
-      transform: translateY(-2px);
-      box-shadow: 0 12px 24px -12px rgba(0, 120, 255, 0.3);
-    }
-
-    .option input[type="radio"] {
-      appearance: none;
-      -webkit-appearance: none;
-      width: 22px;
-      height: 22px;
-      border: 2px solid rgba(255, 255, 255, 0.3);
-      border-radius: 50%;
-      margin-top: 2px;
-      background: transparent;
-      transition: all 0.2s ease;
-      position: relative;
-      cursor: pointer;
-      flex-shrink: 0;
-    }
-
-    .option input[type="radio"]:checked {
-      border-color: #5a9eff;
-      background: #5a9eff;
-      box-shadow: 0 0 12px #5a9eff;
-    }
-
-    .option input[type="radio"]:checked::after {
-      content: "";
-      position: absolute;
-      width: 10px;
-      height: 10px;
-      background: white;
-      border-radius: 50%;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-    }
-
-    .option div {
-      flex: 1;
-    }
-
-    .option label {
-      font-size: 1.2rem;
-      font-weight: 500;
-      color: #f0f4ff;
-      cursor: pointer;
-      display: block;
-      margin-bottom: 4px;
-    }
-
-    .option small {
-      display: block;
-      color: #a0b5d9;
-      font-size: 0.9rem;
-      line-height: 1.4;
-    }
-
-    .launch-btn {
-      align-self: flex-start;
-      background: linear-gradient(125deg, #2b4b9a, #1f3a7a);
-      border: none;
-      border-radius: 40px;
-      padding: 14px 36px;
-      font-size: 1.25rem;
-      font-weight: 600;
-      color: white;
-      cursor: pointer;
-      box-shadow: 0 8px 18px rgba(0, 30, 80, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.1) inset;
-      transition: all 0.25s ease;
-      letter-spacing: 0.3px;
-      position: relative;
-      overflow: hidden;
-    }
-
-    .launch-btn::before {
-      content: "";
-      position: absolute;
-      top: 0;
-      left: -100%;
-      width: 100%;
-      height: 100%;
-      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-      transition: left 0.6s ease;
-    }
-
-    .launch-btn:hover {
-      transform: scale(1.04);
-      background: linear-gradient(125deg, #365fbf, #254a97);
-      box-shadow: 0 12px 28px -5px #3f6ef0, 0 0 0 1px rgba(255, 255, 255, 0.2) inset;
-    }
-
-    .launch-btn:hover::before {
-      left: 100%;
-    }
-
-    .launch-btn:active {
-      transform: scale(0.98);
-    }
-
-    .footer {
-      margin-top: 28px;
-      font-size: 0.85rem;
-      color: #7f92b3;
-      text-align: right;
-      border-top: 1px solid rgba(255, 255, 255, 0.05);
-      padding-top: 16px;
-      letter-spacing: 0.3px;
-    }
-  </style>
+<meta charset="UTF-8">
+<style>
+:root{
+  --bg:#0f1115;
+  --card:#161a22;
+  --border:#222633;
+  --text:#e8ecf1;
+  --muted:#8b93a7;
+  --accent:#4f7cff;
+}
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+  font-family:system-ui,-apple-system,Segoe UI,Inter,sans-serif;
+}
+body{
+  background:var(--bg);
+  color:var(--text);
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:40px;
+}
+.app{
+  width:100%;
+  max-width:680px;
+  display:flex;
+  flex-direction:column;
+  gap:32px;
+}
+header{
+  display:flex;
+  align-items:center;
+  gap:20px;
+}
+header img{
+  width:72px;
+  height:72px;
+  object-fit:contain;
+}
+h1{
+  font-size:1.6rem;
+  font-weight:600;
+}
+.subtitle{
+  font-size:0.95rem;
+  color:var(--muted);
+  margin-top:6px;
+}
+.options{
+  display:flex;
+  flex-direction:column;
+  gap:14px;
+}
+.option{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:16px 18px;
+  border:1px solid var(--border);
+  border-radius:16px;
+  background:var(--card);
+  cursor:pointer;
+  transition:0.2s ease;
+}
+.option:hover{
+  border-color:var(--accent);
+}
+.option-left{
+  display:flex;
+  align-items:center;
+  gap:14px;
+}
+.option input[type="radio"]{
+  accent-color:var(--accent);
+  width:18px;
+  height:18px;
+}
+.option label{
+  font-weight:500;
+  cursor:pointer;
+}
+.option small{
+  display:block;
+  font-size:0.8rem;
+  color:var(--muted);
+  margin-top:4px;
+}
+.breaker-toggle{
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+.switch{
+  position:relative;
+  width:42px;
+  height:22px;
+}
+.switch input{
+  opacity:0;
+  width:0;
+  height:0;
+}
+.slider{
+  position:absolute;
+  inset:0;
+  background:#333;
+  border-radius:20px;
+  transition:0.2s;
+}
+.slider:before{
+  content:"";
+  position:absolute;
+  height:16px;
+  width:16px;
+  left:3px;
+  top:3px;
+  background:white;
+  border-radius:50%;
+  transition:0.2s;
+}
+.switch input:checked + .slider{
+  background:var(--accent);
+}
+.switch input:checked + .slider:before{
+  transform:translateX(20px);
+}
+.tip{
+  position:relative;
+  font-size:0.8rem;
+  color:var(--muted);
+  cursor:help;
+}
+.tip:hover::after{
+  content:"Active des fonctionnalités avancées et des outils expérimentaux pour Ecole Directe.";
+  position:absolute;
+  bottom:130%;
+  left:50%;
+  transform:translateX(-50%);
+  width:220px;
+  background:#111;
+  border:1px solid var(--border);
+  padding:10px;
+  border-radius:10px;
+  font-size:0.75rem;
+  color:#ccc;
+  white-space:normal;
+}
+button{
+  align-self:flex-start;
+  padding:12px 28px;
+  border-radius:999px;
+  border:none;
+  background:var(--accent);
+  color:white;
+  font-weight:600;
+  cursor:pointer;
+  transition:0.2s;
+}
+button:hover{
+  transform:translateY(-2px);
+}
+footer{
+  font-size:0.8rem;
+  color:var(--muted);
+}
+.option{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:16px 18px;
+  border:1px solid var(--border);
+  border-radius:16px;
+  background:var(--card);
+  cursor:pointer;
+  transition:0.2s ease;
+}
+.option-left{
+  display:flex;
+  align-items:center;
+  gap:14px;
+}
+.switch{
+  position:relative;
+  width:40px;
+  height:20px;
+}
+.switch input{
+  opacity:0;
+  width:0;
+  height:0;
+}
+.slider{
+  position:absolute;
+  inset:0;
+  background:#2b2f3a;
+  border-radius:20px;
+  transition:0.2s;
+}
+.slider:before{
+  content:"";
+  position:absolute;
+  height:14px;
+  width:14px;
+  left:3px;
+  top:3px;
+  background:white;
+  border-radius:50%;
+  transition:0.2s;
+}
+.switch input:checked + .slider{
+  background:var(--accent);
+}
+.switch input:checked + .slider:before{
+  transform:translateX(18px);
+}
+.breaker-zone{
+  display:flex;
+  align-items:center;
+}
+.tooltip{
+  position:relative;
+  display:flex;
+  align-items:center;
+}
+.tooltip-text{
+  position:absolute;
+  bottom:130%;
+  left:50%;
+  transform:translateX(-50%);
+  background:#111318;
+  border:1px solid var(--border);
+  padding:8px 10px;
+  font-size:0.75rem;
+  color:#cfd6e6;
+  border-radius:8px;
+  width:220px;
+  text-align:center;
+  opacity:0;
+  pointer-events:none;
+  transition:0.2s ease;
+}
+.tooltip:hover .tooltip-text{
+  opacity:1;
+}
+</style>
 </head>
 <body>
-  <div class="container">
-    <div class="left">
-      <img src="${logoData || 'assets/uedp-big.png'}" alt="Logo EDP">
+<div class="app">
+  <header>
+    <img src="${logoData || 'assets/uedp-big.png'}" alt="Logo">
+    <div>
+      <h1>UEDP</h1>
+      <div class="subtitle">Choisissez votre version</div>
     </div>
-    <div class="right">
-      <div>
-        <h2>Bienvenue sur UEDP</h2>
-        <p>Choisissez votre version</p>
-        <div class="options" id="options">
-          ${availableSites.map((site, index) => `
-            <div class="option" onclick="document.getElementById('site${index}').click();">
-              <input type="radio" name="site" id="site${index}" value="${index}" ${index === 0 ? 'checked' : ''}>
-              <div>
-                <label for="site${index}">${site.name}</label>
-                <small>${site.description}</small>
-              </div>
-            </div>
-          `).join('')}
+  </header>
+  ${availableSites.map((site, index) => `
+  <div class="option" onclick="document.getElementById('site${index}').click();">
+    <div class="option-left">
+      <input type="radio" name="site" id="site${index}" value="${index}" ${index === 0 ? 'checked' : ''}>
+      <div class="text-block">
+        <label for="site${index}">${site.name}</label>
+        <small>${site.description}</small>
+      </div>
+    </div>
+    ${site.name.toLowerCase().includes("ecole directe") ? `
+      <div class="breaker-zone" onclick="event.stopPropagation();">
+        <div class="tooltip">
+          <span class="tooltip-text">
+            Active des outils avancés et des fonctionnalités expérimentales.
+          </span>
+          <label class="switch">
+            <input type="checkbox" id="breakerToggle">
+            <span class="slider"></span>
+          </label>
         </div>
       </div>
-      <button class="launch-btn" id="launchBtn">Lancer</button>
-      <div class="footer">UEDP Launcher</div>
-    </div>
+    ` : ``}
   </div>
-
-  <script>
-    document.getElementById('launchBtn').addEventListener('click', () => {
-      const selected = document.querySelector('input[name="site"]:checked');
-      if (selected) {
-        const index = parseInt(selected.value);
-        const url = ${JSON.stringify(availableSites.map(s => s.url))}[index];
-        window.launcherAPI.launch(url, index);
-      }
-    });
-  </script>
+`).join('')}
+  <button id="launchBtn">Lancer</button>
+  <footer>UEDP Launcher</footer>
+</div>
+<script>
+document.getElementById('launchBtn').addEventListener('click', () => {
+  const selected = document.querySelector('input[name="site"]:checked');
+  const breaker = document.getElementById('breakerToggle')?.checked || false;
+  if (selected) {
+    const index = parseInt(selected.value);
+    const url = ${JSON.stringify(availableSites.map(s => s.url))}[index];
+    
+    window.launcherAPI.launch(url, index, breaker);
+  }
+});
+</script>
 </body>
 </html>
     `;
