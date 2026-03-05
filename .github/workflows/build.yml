@@ -40,26 +40,29 @@ jobs:
         if: matrix.os == 'ubuntu-latest'
         run: npm run build:linux
 
-      - name: Save build info
+      - name: Collect build info
         run: |
           FILE=$(find dist -type f \( -name "*.exe" -o -name "*.dmg" -o -name "*.AppImage" \) | head -n 1)
-
-          if [ -z "$FILE" ]; then
-            echo "No build file found"
-            exit 1
-          fi
 
           NAME=$(basename "$FILE")
           SIZE=$(du -h "$FILE" | cut -f1)
 
-          echo "NAME=$NAME" >> $GITHUB_ENV
-          echo "SIZE=$SIZE" >> $GITHUB_ENV
+          echo "$NAME" > build_name.txt
+          echo "$SIZE" > build_size.txt
 
-      - name: Upload artifact
+      - name: Upload build files
         uses: actions/upload-artifact@v4
         with:
           name: build-${{ matrix.os }}
           path: src/dist/*
+
+      - name: Upload build info
+        uses: actions/upload-artifact@v4
+        with:
+          name: info-${{ matrix.os }}
+          path: |
+            src/build_name.txt
+            src/build_size.txt
 
 
   update-uploads:
@@ -69,21 +72,32 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Update UPLOADS.md
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Read build info
         run: |
+          WIN_NAME=$(cat artifacts/info-windows-latest/build_name.txt)
+          WIN_SIZE=$(cat artifacts/info-windows-latest/build_size.txt)
+
+          MAC_NAME=$(cat artifacts/info-macos-latest/build_name.txt)
+          MAC_SIZE=$(cat artifacts/info-macos-latest/build_size.txt)
+
+          LINUX_NAME=$(cat artifacts/info-ubuntu-latest/build_name.txt)
+          LINUX_SIZE=$(cat artifacts/info-ubuntu-latest/build_size.txt)
+
           DATE=$(date "+%d/%m/%Y à %H:%M:%S")
 
           sed -i "s|Mis à jour le .*|Mis à jour le $DATE*|" UPLOADS.md
 
-          sed -i "s|Build : (réussi / échoué)|Build : réussi|g" UPLOADS.md
-          sed -i "s|Nom du build : (nom)|Nom du build : build-auto|g" UPLOADS.md
-          sed -i "s|Capacité du build : (taille)|Capacité du build : auto|g" UPLOADS.md
-          sed -i "s|Lien : (lien)|Lien : https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}|g" UPLOADS.md
+          sed -i "s|Nom du build : (nom)|Nom du build : $WIN_NAME|" UPLOADS.md
+          sed -i "s|Capacité du build : (taille)|Capacité du build : $WIN_SIZE|" UPLOADS.md
 
       - name: Commit changes
         run: |
-          git config user.name "github-actions"
-          git config user.email "actions@github.com"
+          git config user.name github-actions
+          git config user.email actions@github.com
 
           git add UPLOADS.md
           git commit -m "Update build info" || echo "No changes"
