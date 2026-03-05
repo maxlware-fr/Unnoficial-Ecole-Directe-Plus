@@ -6,8 +6,8 @@ on:
   workflow_dispatch:
 
 jobs:
-  build:
 
+  build:
     strategy:
       matrix:
         os: [windows-latest, macos-latest, ubuntu-latest]
@@ -19,16 +19,13 @@ jobs:
         working-directory: src
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Setup Node
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: 20
 
-      - name: Install dependencies
-        run: npm install
+      - run: npm install
 
       - name: Build Windows
         if: matrix.os == 'windows-latest'
@@ -42,8 +39,43 @@ jobs:
         if: matrix.os == 'ubuntu-latest'
         run: npm run build:linux
 
-      - name: Upload artifacts
+      - name: Save build info
+        run: |
+          FILE=$(ls dist | head -n 1)
+          SIZE=$(du -h dist/$FILE | cut -f1)
+
+          echo "NAME=$FILE" >> $GITHUB_ENV
+          echo "SIZE=$SIZE" >> $GITHUB_ENV
+
+      - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: build-${{ matrix.os }}
           path: src/dist/*
+
+
+  update-uploads:
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Update UPLOADS.md
+        run: |
+          DATE=$(date "+%d/%m/%Y à %H:%M:%S")
+
+          sed -i "s/Mis à jour le .*/Mis à jour le $DATE*/" UPLOADS.md
+
+          sed -i "s/Build : (réussi \/ échoué)/Build : réussi/g" UPLOADS.md
+          sed -i "s/Nom du build : (nom)/Nom du build : build-auto/g" UPLOADS.md
+          sed -i "s/Capacité du build : (taille)/Capacité du build : auto/g" UPLOADS.md
+          sed -i "s/Lien : (lien)/Lien : https:\/\/github.com\/${{ github.repository }}\/actions\/runs\/${{ github.run_id }}/g" UPLOADS.md
+
+      - name: Commit changes
+        run: |
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+          git add UPLOADS.md
+          git commit -m "Update build info"
+          git push
