@@ -17,6 +17,7 @@ jobs:
     defaults:
       run:
         working-directory: src
+        shell: bash
 
     steps:
       - uses: actions/checkout@v4
@@ -41,10 +42,17 @@ jobs:
 
       - name: Save build info
         run: |
-          FILE=$(ls dist | head -n 1)
-          SIZE=$(du -h dist/$FILE | cut -f1)
+          FILE=$(find dist -type f \( -name "*.exe" -o -name "*.dmg" -o -name "*.AppImage" \) | head -n 1)
 
-          echo "NAME=$FILE" >> $GITHUB_ENV
+          if [ -z "$FILE" ]; then
+            echo "No build file found"
+            exit 1
+          fi
+
+          NAME=$(basename "$FILE")
+          SIZE=$(du -h "$FILE" | cut -f1)
+
+          echo "NAME=$NAME" >> $GITHUB_ENV
           echo "SIZE=$SIZE" >> $GITHUB_ENV
 
       - name: Upload artifact
@@ -65,17 +73,18 @@ jobs:
         run: |
           DATE=$(date "+%d/%m/%Y à %H:%M:%S")
 
-          sed -i "s/Mis à jour le .*/Mis à jour le $DATE*/" UPLOADS.md
+          sed -i "s|Mis à jour le .*|Mis à jour le $DATE*|" UPLOADS.md
 
-          sed -i "s/Build : (réussi \/ échoué)/Build : réussi/g" UPLOADS.md
-          sed -i "s/Nom du build : (nom)/Nom du build : build-auto/g" UPLOADS.md
-          sed -i "s/Capacité du build : (taille)/Capacité du build : auto/g" UPLOADS.md
-          sed -i "s/Lien : (lien)/Lien : https:\/\/github.com\/${{ github.repository }}\/actions\/runs\/${{ github.run_id }}/g" UPLOADS.md
+          sed -i "s|Build : (réussi / échoué)|Build : réussi|g" UPLOADS.md
+          sed -i "s|Nom du build : (nom)|Nom du build : build-auto|g" UPLOADS.md
+          sed -i "s|Capacité du build : (taille)|Capacité du build : auto|g" UPLOADS.md
+          sed -i "s|Lien : (lien)|Lien : https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}|g" UPLOADS.md
 
       - name: Commit changes
         run: |
           git config user.name "github-actions"
           git config user.email "actions@github.com"
+
           git add UPLOADS.md
-          git commit -m "Update build info"
+          git commit -m "Update build info" || echo "No changes"
           git push
